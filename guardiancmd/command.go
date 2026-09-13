@@ -198,6 +198,10 @@ type CommonCommand struct {
 		UseContainerdForProcesses bool   `long:"use-containerd-for-processes" description:"Use containerd to run processes in containers."`
 	} `group:"Containerd"`
 
+	CDI struct {
+		SpecDirs []string `long:"cdi-spec-dirs" description:"Directories to search for CDI (Container Device Interface) Spec files, e.g. /var/vcap/data/cdi/specs."`
+	} `group:"CDI"`
+
 	CPUThrottling struct {
 		Enabled       bool   `long:"enable-cpu-throttling" description:"Enable CPU throttling."`
 		CheckInterval uint32 `long:"cpu-throttling-check-interval" default:"15" description:"How often to check which apps need to get CPU throttled or not."`
@@ -579,6 +583,7 @@ func (cmd *CommonCommand) wireContainerizer(
 		bundlerules.Hostname{},
 		bundlerules.Windows{},
 		bundlerules.RootFS{},
+		bundlerules.CDIDevices{},
 		bundlerules.Limits{
 			CpuQuotaPerShare: cmd.Limits.CPUQuotaPerShare,
 			BlockIOWeight:    cmd.Limits.DefaultBlockIOWeight,

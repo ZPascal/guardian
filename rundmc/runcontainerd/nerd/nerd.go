@@ -25,6 +25,7 @@ import (
 	"github.com/containerd/typeurl/v2"
 
 	specs "github.com/opencontainers/runtime-spec/specs-go"
+	"tags.cncf.io/container-device-interface/pkg/cdi"
 )
 
 type Nerd struct {
@@ -32,19 +33,42 @@ type Nerd struct {
 	context   context.Context
 	ioFifoDir string
 	mp        *metrics.MetricsProvider
+	cdiCache  *cdi.Cache
 }
 
-func New(client *client.Client, context context.Context, ioFifoDir string, mp *metrics.MetricsProvider) *Nerd {
+func New(client *client.Client, context context.Context, ioFifoDir string, mp *metrics.MetricsProvider, cdiCache *cdi.Cache) *Nerd {
 	return &Nerd{
 		client:    client,
 		context:   context,
 		ioFifoDir: ioFifoDir,
 		mp:        mp,
+		cdiCache:  cdiCache,
 	}
+}
+
+// CDIDevicesFromSpec extracts the CDI fully-qualified device names carried by
+// the cdi.k8s.io/gpu OCI annotation (set by rundmc/bundlerules.CDIDevices),
+// e.g. "nvidia.com/gpu=0,nvidia.com/gpu=1" -> ["nvidia.com/gpu=0", "nvidia.com/gpu=1"].
+func CDIDevicesFromSpec(spec *specs.Spec) []string {
+	if spec.Annotations == nil {
+		return nil
+	}
+	value, ok := spec.Annotations["cdi.k8s.io/gpu"]
+	if !ok || value == "" {
+		return nil
+	}
+	return strings.Split(value, ",")
 }
 
 func (n *Nerd) Create(log lager.Logger, containerID string, spec *specs.Spec, hostUID, hostGID uint32, pio func() (io.Reader, io.Writer, io.Writer)) error {
 	log.Debug("creating-container", lager.Data{"containerID": containerID})
+
+	if devices := CDIDevicesFromSpec(spec); len(devices) > 0 && n.cdiCache != nil {
+		if unresolved, err := n.cdiCache.InjectDevices(spec, devices...); err != nil {
+			return fmt.Errorf("cdi device injection failed for %v: %w", unresolved, err)
+		}
+	}
+
 	container, err := n.client.NewContainer(n.context, containerID, client.WithSpec(spec))
 	if err != nil {
 		return err

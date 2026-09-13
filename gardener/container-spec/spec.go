@@ -51,5 +51,9 @@ type DesiredContainerSpec struct {
 
 	Limits garden.Limits
 
+	// CDIDevices lists CDI fully-qualified device names to inject via an
+	// OCI annotation, resolved by runc's own --cdi-spec-dirs.
+	CDIDevices []string
+
 	BaseConfig specs.Spec
 }

@@ -165,6 +165,12 @@ type ContainerSpec struct {
 	// If a container port is not given, the port will be the same as the
 	// host port.
 	NetIn []NetIn `json:"netin,omitempty"`
+
+	// CDIDevices lists Container Device Interface (CDI) fully-qualified
+	// device names to inject via the container runtime's CDI resolution,
+	// e.g. "nvidia.com/gpu=0". One entry per requested device.
+	// See https://github.com/cncf-tags/container-device-interface.
+	CDIDevices []string `json:"cdi_devices,omitempty"`
 }
 
 type ImageRef struct {

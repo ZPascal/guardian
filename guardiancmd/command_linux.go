@@ -43,6 +43,7 @@ import (
 	"github.com/opencontainers/cgroups"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"golang.org/x/sys/unix"
+	"tags.cncf.io/container-device-interface/pkg/cdi"
 )
 
 const containerdNamespace = "garden"
@@ -146,7 +147,15 @@ func (f *LinuxFactory) WireContainerd(processBuilder *processes.ProcBuilder, use
 	}
 	ctx := namespaces.WithNamespace(context.Background(), containerdNamespace)
 	ctx = leases.WithLease(ctx, "lease-is-off")
-	nerd := nerdpkg.New(containerdClient, ctx, filepath.Join(containerdRuncRoot(), "fifo"), metricsProvider)
+
+	var cdiCache *cdi.Cache
+	if len(f.config.CDI.SpecDirs) > 0 {
+		cdiCache, err = cdi.NewCache(cdi.WithSpecDirs(f.config.CDI.SpecDirs...))
+		if err != nil {
+			return nil, nil, nil, nil, nil, err
+		}
+	}
+	nerd := nerdpkg.New(containerdClient, ctx, filepath.Join(containerdRuncRoot(), "fifo"), metricsProvider, cdiCache)
 	nerdStopper := nerdpkg.NewNerdStopper(containerdClient)
 	pidGetter := &runcontainerd.PidGetter{Nerd: nerd}
 

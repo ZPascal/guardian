@@ -298,6 +298,13 @@ func (b Bndl) MaskedPaths() []string {
 	return b.Spec.Linux.MaskedPaths
 }
 
+// WithAnnotations returns a bundle with the given OCI annotations set,
+// replacing any existing annotations. The original bundle is not modified.
+func (b Bndl) WithAnnotations(annotations map[string]string) Bndl {
+	b.Spec.Annotations = annotations
+	return b
+}
+
 type NamespaceSlice []specs.LinuxNamespace
 
 func (slice NamespaceSlice) Set(ns specs.LinuxNamespace) NamespaceSlice {

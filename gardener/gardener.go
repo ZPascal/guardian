@@ -298,6 +298,7 @@ func (g *Gardener) Create(containerSpec garden.ContainerSpec) (ctr garden.Contai
 		Env:        containerSpec.Env,
 		BindMounts: append(containerSpec.BindMounts, networkBindMounts...),
 		Limits:     containerSpec.Limits,
+		CDIDevices: containerSpec.CDIDevices,
 		BaseConfig: runtimeSpec,
 	}
 
