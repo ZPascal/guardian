@@ -491,4 +491,25 @@ var _ = Describe("Bundle", func() {
 			Expect(paths[1]).To(Equal("path2"))
 		})
 	})
+
+	Describe("WithAnnotations", func() {
+		It("sets the Annotations in the bundle", func() {
+			returnedBundle := initialBundle.WithAnnotations(map[string]string{"key1": "value1"})
+			Expect(returnedBundle.Spec.Annotations).To(HaveKeyWithValue("key1", "value1"))
+		})
+
+		It("merges annotations when called on a bundle that already has annotations", func() {
+			initialBundle = initialBundle.WithAnnotations(map[string]string{"key1": "value1", "key2": "value2"})
+			returnedBundle := initialBundle.WithAnnotations(map[string]string{"key3": "value3"})
+			Expect(returnedBundle.Spec.Annotations).To(HaveKeyWithValue("key1", "value1"))
+			Expect(returnedBundle.Spec.Annotations).To(HaveKeyWithValue("key2", "value2"))
+			Expect(returnedBundle.Spec.Annotations).To(HaveKeyWithValue("key3", "value3"))
+		})
+
+		It("does not modify the original bundle", func() {
+			returnedBundle := initialBundle.WithAnnotations(map[string]string{"key1": "value1"})
+			Expect(initialBundle.Spec.Annotations).To(BeNil())
+			Expect(returnedBundle.Spec.Annotations).To(HaveKeyWithValue("key1", "value1"))
+		})
+	})
 })

@@ -1,25 +1,37 @@
-package nerd_test
+package nerd
 
 import (
-	"code.cloudfoundry.org/guardian/rundmc/runcontainerd/nerd"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"reflect"
+	"testing"
+
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 )
 
-var _ = Describe("CDIDevicesFromSpec", func() {
-	It("splits the cdi.k8s.io/gpu annotation on commas", func() {
+func TestCDIDevicesFromSpec(t *testing.T) {
+	t.Run("splits the cdi.k8s.io/gpu annotation on commas", func(t *testing.T) {
 		spec := &specs.Spec{Annotations: map[string]string{
 			"cdi.k8s.io/gpu": "nvidia.com/gpu=0,nvidia.com/gpu=1",
 		}}
-		Expect(nerd.CDIDevicesFromSpec(spec)).To(Equal([]string{"nvidia.com/gpu=0", "nvidia.com/gpu=1"}))
+		got := CDIDevicesFromSpec(spec)
+		want := []string{"nvidia.com/gpu=0", "nvidia.com/gpu=1"}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("CDIDevicesFromSpec(%v) = %v, want %v", spec, got, want)
+		}
 	})
 
-	It("returns nil when the annotation is absent", func() {
-		Expect(nerd.CDIDevicesFromSpec(&specs.Spec{})).To(BeNil())
+	t.Run("returns nil when the annotation is absent", func(t *testing.T) {
+		spec := &specs.Spec{}
+		got := CDIDevicesFromSpec(spec)
+		if got != nil {
+			t.Errorf("CDIDevicesFromSpec(%v) = %v, want nil", spec, got)
+		}
 	})
 
-	It("returns nil when Annotations itself is nil", func() {
-		Expect(nerd.CDIDevicesFromSpec(&specs.Spec{Annotations: nil})).To(BeNil())
+	t.Run("returns nil when Annotations itself is nil", func(t *testing.T) {
+		spec := &specs.Spec{Annotations: nil}
+		got := CDIDevicesFromSpec(spec)
+		if got != nil {
+			t.Errorf("CDIDevicesFromSpec(%v) = %v, want nil", spec, got)
+		}
 	})
-})
+}

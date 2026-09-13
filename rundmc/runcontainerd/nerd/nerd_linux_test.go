@@ -140,6 +140,15 @@ var _ = Describe("Nerd", func() {
 			Expect(cnerd.Create(testLogger, containerID, spec, maximusUID, maximusGID, initProcessIO)).To(Succeed())
 			Eventually(stdout, "30s").Should(gbytes.Say("hi"))
 		})
+
+		It("returns an error when CDI devices are requested but cdiCache is nil", func() {
+			spec = generateSpec(containerdContext, containerdClient, containerID)
+			spec.Annotations = map[string]string{"cdi.k8s.io/gpu": "nvidia.com/gpu=0"}
+			err := cnerd.Create(testLogger, containerID, spec, maximusUID, maximusGID, initProcessIO)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("CDI devices requested"))
+			Expect(err.Error()).To(ContainSubstring("no CDI cache configured"))
+		})
 	})
 
 	Describe("Spec", func() {

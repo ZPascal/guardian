@@ -298,10 +298,23 @@ func (b Bndl) MaskedPaths() []string {
 	return b.Spec.Linux.MaskedPaths
 }
 
-// WithAnnotations returns a bundle with the given OCI annotations set,
-// replacing any existing annotations. The original bundle is not modified.
+// WithAnnotations returns a bundle with the given OCI annotations merged,
+// preserving any existing annotations. The original bundle is not modified.
 func (b Bndl) WithAnnotations(annotations map[string]string) Bndl {
-	b.Spec.Annotations = annotations
+	if b.Spec.Annotations == nil {
+		b.Spec.Annotations = make(map[string]string)
+	} else {
+		// Make a copy of the existing annotations map to avoid mutating the caller's data
+		existingAnnotations := make(map[string]string)
+		for k, v := range b.Spec.Annotations {
+			existingAnnotations[k] = v
+		}
+		b.Spec.Annotations = existingAnnotations
+	}
+	// Merge the new annotations into the map
+	for k, v := range annotations {
+		b.Spec.Annotations[k] = v
+	}
 	return b
 }
 

@@ -63,7 +63,10 @@ func CDIDevicesFromSpec(spec *specs.Spec) []string {
 func (n *Nerd) Create(log lager.Logger, containerID string, spec *specs.Spec, hostUID, hostGID uint32, pio func() (io.Reader, io.Writer, io.Writer)) error {
 	log.Debug("creating-container", lager.Data{"containerID": containerID})
 
-	if devices := CDIDevicesFromSpec(spec); len(devices) > 0 && n.cdiCache != nil {
+	if devices := CDIDevicesFromSpec(spec); len(devices) > 0 {
+		if n.cdiCache == nil {
+			return fmt.Errorf("CDI devices requested (%v) but no CDI cache configured — pass --cdi-spec-dirs to enable CDI device injection", devices)
+		}
 		if unresolved, err := n.cdiCache.InjectDevices(spec, devices...); err != nil {
 			return fmt.Errorf("cdi device injection failed for %v: %w", unresolved, err)
 		}
